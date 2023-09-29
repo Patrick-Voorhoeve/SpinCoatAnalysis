@@ -1,0 +1,143 @@
+
+.DataImage {
+	position: absolute;
+	top: 0;
+	left: 0;
+
+	width: auto;
+	height: auto;
+
+	transition: opacity 0.5s ease-in-out;
+
+	&.loading {
+		opacity: 20%;
+	}
+
+	canvas {
+		width: auto;
+		height: auto;
+		max-width: 900px;
+		background-color: black;
+	}
+
+	.settings {
+		position: absolute;
+		top: calc(100% + 10px);
+		left: 0px;
+
+		width: 100%;
+		height: 300px;
+
+		border: 1px solid white;
+		border-radius: 10px;
+
+		display: flex;
+		flex-direction: column;
+		justify-content: flex-start;
+		align-items: center;
+
+		box-sizing: border-box;
+		padding: 20px;
+
+		z-index: 1;
+
+		.row {
+			position: relative;
+			width: 100%;
+			display: flex;
+			flex-direction: row;
+			justify-content: flex-start;
+			align-items: center;
+
+			margin-bottom: 20px;
+		}
+
+		.pointPicker {
+			margin-top: 30px;
+			width: 100%;
+			height: auto;
+
+			display: flex;
+			flex-direction: row;
+			justify-content: flex-start;
+			flex-wrap: wrap;
+			align-items: center;
+
+			.point {
+				min-width: 133px;
+				min-height: 50px;
+				margin-bottom: 10px;
+				margin-right: 10px;
+				background-color: #00000033;
+
+				border-radius: 10px;
+				border: 1px solid #ffffffcc;
+				box-sizing: border-box;
+				padding: 5px;
+
+				color: #ffffffcc;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+
+				cursor: pointer;
+
+				&.disabled {
+					opacity: 10%;
+				}
+
+				&:hover {
+					background-color: #ffffff22;
+				}
+
+				* {
+					user-select: none;
+				}
+
+				p {
+					margin: 0;
+					padding: 0;
+					margin-left: 10px;
+					transform: translateY(2px);
+				}
+
+				.dot {
+					width: 15px;
+					height: 15px;
+
+					border-radius: 50%;
+				}
+			}
+
+		}
+		.sliderSetting {
+			position: absolute;
+			top: 0;
+			left: 0;
+
+			width: 100%;
+			height: auto;
+
+			z-index: 100000;
+		}
+
+
+		.selectSetting {
+			margin-right: 50px;
+		}
+
+		.radioSetting {
+			display: flex;
+			flex-direction: row;
+			justify-content: flex-start;
+			align-items: center;
+
+			color: white;
+
+			input {
+				margin-right: 10px;
+			}
+		}
+	}
+}
+

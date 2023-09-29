@@ -1,0 +1,31 @@
+.SpectralNormalised {
+	position: absolute;
+	top: 1000px;
+	left: 1900px;
+
+	width: 800px;
+	height: 400px;
+
+	.SpectraSettings {
+		border: 1px solid #ffffff66;
+		border-radius: 10px;
+		box-sizing: border-box;
+		padding: 20px;
+		display: flex;
+		justify-content: flex-start;
+		align-items: center;
+		height: 100px;
+		margin-top: 30px;
+
+		label {
+			color: #ffffff;
+			opacity: 80%;
+		}
+		input {
+			outline: none;
+			border: none;
+			background-color: #00000022;
+			color: white;
+		}
+	}
+}

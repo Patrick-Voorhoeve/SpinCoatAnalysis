@@ -1,0 +1,20 @@
+
+.Histogram {
+	position: absolute;
+	top: 0px;
+	left: 1000px;
+
+	width: 800px;
+	height: 400px;
+
+	transition: opacity 0.5s ease-in-out;
+
+	&.loading {
+		opacity: 20%;
+	}
+
+	canvas {
+		min-width: 100%;
+		min-height: 100%;
+	}
+}
