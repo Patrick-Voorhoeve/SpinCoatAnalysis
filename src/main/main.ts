@@ -20,6 +20,7 @@ declare global {
 }
 
 const RESOURCES_PATH = app.isPackaged ? path.join(process.resourcesPath, 'assets') : path.join(__dirname, '../../assets');
+const DATA_FOLDER 	 = app.isPackaged ? path.join(process.resourcesPath, 'assets/Data') : path.join(__dirname, '../../assets/Data');
 const ICON_PATH 	 = path.join(RESOURCES_PATH, ...'icon.png');
 
 
@@ -52,7 +53,7 @@ const createWindow = async () => {
 
 	// Begin by reading in the relevant data
 	const { sampleParser } = global;
-	sampleParser.loadManifest( path.resolve(__dirname, './Data/Post Hydrogenation Day 2') );
+	sampleParser.loadManifest( DATA_FOLDER );
 
 
 	const displays 			= screen.getAllDisplays()
