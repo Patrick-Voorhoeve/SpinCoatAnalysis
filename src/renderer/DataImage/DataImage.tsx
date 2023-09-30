@@ -1,29 +1,37 @@
 import './DataImage.scss';
-import { Chart, registerables }                       from 'chart.js/auto';
-import { useEffect, useRef, useState }                from "react"
-import ColorScale								                             from 'color-scales';
-import { Image, Manifest }                            from '../../main/SampleParser';
-import { RangeSlider } 								                       from '@mantine/core'
-import { Settings }	                                  from '../App';
+import { Chart, registerables }                             from 'chart.js/auto';
+import { useEffect, useRef, useState }                      from "react"
+import ColorScale											from 'color-scales';
+import { Image, Manifest }                                  from '../../main/SampleParser';
+import { RangeSlider, Text } 								from '@mantine/core'
+import { Settings }	                                        from '../App';
+import * as math 											from 'mathjs';
+import { siRound }                                          from '../Helpers/Methods';
 
 Chart.register(...registerables);
 
 type Props = {
-	imageName: 		string
-	setImageName: 	React.Dispatch<React.SetStateAction<string>>
-	settings:		Settings
-	setSettings:	React.Dispatch<React.SetStateAction<Settings>>
-	MANIFEST:		Manifest | null
-	IMAGE:			Image | null
+	imageName    : string
+	setImageName : React.Dispatch<React.SetStateAction<string>>
+	settings     : Settings
+	setSettings  : React.Dispatch<React.SetStateAction<Settings>>
+	MANIFEST     : Manifest | null
+	IMAGE        : Image | null
 }
 
 export default function DataImage( { imageName, setImageName, settings, setSettings, MANIFEST, IMAGE }: Props ) {
 	const [ loading , setLoading   ]	= useState(true);
 	const canvas 						= useRef( null as HTMLCanvasElement | null );
-	const [ sliderVal, setSliderval ]	= useState([0, settings.actualMaxValue] as [ number, number ]);
+	const [ slider1Val, setSlider1Val ]	= useState([0, settings.actualMaxValue] as [ number, number ]);
+	const [ slider2Val, setSlider2Val ]	= useState([0, settings.actualMaxValue] as [ number, number ]);
+	const [ mean      , setMean 	  ] = useState(0);
+	const [ std 	  , setStd 		  ] = useState(0);
+	const [ min 	  , setMin 		  ] = useState(0);
+	const [ max 	  , setMax 		  ] = useState(0);
 
 	useEffect(() => {
-		setSliderval([settings.minValue, settings.maxValue ]);
+		setSlider1Val([settings.minValue, settings.maxValue ]);
+		setSlider2Val([settings.truncMin, settings.truncMax ]);
 	}, [ settings ])
 
 	useEffect(() => {
@@ -31,40 +39,48 @@ export default function DataImage( { imageName, setImageName, settings, setSetti
 		if(!MANIFEST)		return;
 		if(!IMAGE)			return;
 
-		const POINTS 		= MANIFEST.filter( man => man['Image Name'] === imageName );
-		const INFO			= POINTS[0];
-		const DATA 			= IMAGE.data;
+		const POINTS    	= MANIFEST.filter( man => man['Image Name'] === imageName );
+		const INFO      	= POINTS[0];
+		const DATA      	= IMAGE.data.map( row => row.map(val => val > settings.truncMax ? settings.truncMax : val).map(val => val < settings.truncMin ? settings.truncMin : val ) );
 
 
-		if(!DATA) return;
-		if(!INFO) return;
+		if(!DATA) 			return;
+		if(!INFO) 			return;
 
-		const absMax 		= 7000000;
-		const data 			= DATA.map( row => row.map( v => Math.min(v, absMax )) );
+		const absMax   		= 7000000;
+		const data     		= DATA.map( row => row.map( v => Math.min(v, absMax )) );
 
-		const flat 			= data.flat();
-		const max 			= settings.maxValue;
-		const min 			= settings.minValue;
+		const flat   		= data.flat();
+
+		const max    		= Math.max(settings.maxValue, settings.minValue);
+		const min    		= Math.min(settings.maxValue, settings.minValue);
+		const mean 			= math.mean(flat);
+		const std 			= Number(math.std(flat));
+
+		setMin(min);
+		setMax(max);
+		setMean(mean);
+		setStd(std);
 
 
 		if(!canvas.current) return console.log("Could not find canvas ref");
-		const ctx 			= canvas.current?.getContext("2d");
+		const ctx    		= canvas.current?.getContext("2d");
 		if(!ctx) 		  	return console.log("Could not find canvas context");
 
 		setLoading(true);
 
-		const width			= INFO["# Pixels X"];
-		const height		= INFO["# Pixels Y"];
-		const startX		= INFO["Start X (μm)"];
-		const startY		= INFO["Start Y (μm)"];
-		const OffsetX 		= INFO["Offset X (μm)"];
-		const OffsetY 		= INFO["Offset Y (μm)"];
-		const resX			= INFO["Pixels / μm (X)"];
-		const resY			= INFO["Pixels / μm (X)"];
+		const width      	= INFO["# Pixels X"];
+		const height     	= INFO["# Pixels Y"];
+		const startX     	= INFO["Start X (μm)"];
+		const startY     	= INFO["Start Y (μm)"];
+		const OffsetX    	= INFO["Offset X (μm)"];
+		const OffsetY    	= INFO["Offset Y (μm)"];
+		const resX       	= INFO["Pixels / μm (X)"];
+		const resY       	= INFO["Pixels / μm (X)"];
 
-		const RES 			= 10;
-		ctx.canvas.width	= width * RES;
-		ctx.canvas.height	= height * RES;
+		const RES           = 10;
+		ctx.canvas.width    = width * RES;
+		ctx.canvas.height   = height * RES;
 
 		const scale 		= new ColorScale(min, max, ["#000000", "#170635", "#df5633", "#fff021"]);
 
@@ -113,8 +129,68 @@ export default function DataImage( { imageName, setImageName, settings, setSetti
 
 	}, [ settings, IMAGE, MANIFEST ])
 
+	const info 		= MANIFEST?.find(man => man['Image Name'] === imageName);
+	const imgHeight = document.getElementById('image')?.clientHeight || 100;
+	const numDashes = 11;
+
 	return (
 		<div className={`DataImage ${loading ? 'loading' : ''}`}>
+
+			<div id='informationBox' style={{
+				transform: `translateX( -${(document.getElementById('informationBox')?.clientWidth || 0) + 80 }px)`
+			}}>
+				<span className='infoRow'>
+					<h4> Sample Name </h4>
+					<p> { info?.['Sample Name'] } </p>
+				</span>
+				<span className='infoRow'>
+					<h4> Image Name </h4>
+					<p> { info?.['Image Name'] } </p>
+				</span>
+				<span className='infoRow'>
+					<h4> Excitation Power </h4>
+					<p> { info?.['Power (μW)'] } μW </p>
+				</span>
+				<span className='infoRow'>
+					<h4> Exposure Time </h4>
+					<p> { info?.['Exposure Time (s)'] } s </p>
+				</span>
+				<span className='infoRow'>
+					<h4> Centre Wavelength </h4>
+					<p> { info?.['Center Wavelength (nm)'] } nm  </p>
+				</span>
+				<span className='infoRow'>
+					<h4> Filter </h4>
+					<p> { info?.Filter }  </p>
+				</span>
+				<span className='infoRow'>
+					<h4> Width </h4>
+					<p> { info?.['Range X(μm)'] } μm  </p>
+				</span>
+				<span className='infoRow'>
+					<h4> Height </h4>
+					<p> { info?.['Range Y (μm)'] } μm  </p>
+				</span>
+				<span className='infoRow'>
+					<h4> Mean Counts </h4>
+					<p> { siRound(mean) }  </p>
+				</span>
+				<span className='infoRow'>
+					<h4> Counts Standard Deviation </h4>
+					<p> { siRound(std) }  </p>
+				</span>
+				<span className='infoRow'>
+					<h4> Min Counts </h4>
+					<p> { siRound(min) } </p>
+				</span>
+				<span className='infoRow'>
+					<h4> Max Counts </h4>
+					<p> { siRound(max) } </p>
+				</span>
+
+
+			</div>
+
 			<div className='settings'>
 				<div className='row'>
 					<span className='selectSetting'>
@@ -134,11 +210,23 @@ export default function DataImage( { imageName, setImageName, settings, setSetti
 
 				<div className='row'>
 					<span className='sliderSetting'>
-						<RangeSlider min={0} value={sliderVal} max={settings.actualMaxValue} onChange={setSliderval} onChangeEnd={( val ) => {
+						<p> Color Scale </p>
+						<RangeSlider min={0} value={slider1Val} max={settings.actualMaxValue} onChange={setSlider1Val} onChangeEnd={( val ) => {
 							setSettings({...settings, minValue: val[0], maxValue: val[1] });
-						}} />
+						}} marks={[{ value: settings.truncMin, label: `${settings.truncMin}`}, { value: settings.actualMaxValue, label: settings.actualMaxValue}]}/>
 					</span>
 				</div>
+
+				<div className='row'>
+					<span className='sliderSetting'>
+						<p > Truncate Data </p>
+						<RangeSlider min={0} value={slider2Val} max={settings.actualMaxValue} onChange={setSlider2Val} onChangeEnd={( val ) => {
+							setSettings({ ...settings, truncMin: val[0], truncMax: val[1] });
+
+						}} marks={[{ value: settings.truncMin, label: `${settings.truncMin}`}, { value: settings.actualMaxValue, label: settings.actualMaxValue}]}/>
+					</span>
+				</div>
+
 
 				<div className='pointPicker'>
 					{ MANIFEST?.filter(p => p['Image Name'] === imageName).map(point => (
@@ -146,8 +234,6 @@ export default function DataImage( { imageName, setImageName, settings, setSetti
 							let dP 			= [...settings.disabledPoints];
 							if(dP.includes(point.pointName)) dP.splice( dP.findIndex(p => p === point.pointName), 1 );
 							else dP.push(point.pointName);
-
-							console.log(dP)
 
 							setSettings({ ...settings, disabledPoints: dP })
 						}}>
@@ -157,7 +243,28 @@ export default function DataImage( { imageName, setImageName, settings, setSetti
 					)) }
 				</div>
 			</div>
-			<canvas ref={ canvas } />
+
+			<div className='scale scaleX'>
+				<div className='label x'> Distance (μm) </div>
+				<div className='line'> </div>
+				{ new Array(numDashes).fill(1).map( (d, i) => (
+					<div className='dash' style={{
+						transform: `translateY(${i * ((imgHeight + (imgHeight / numDashes)) / numDashes)}px)`
+					}}> <p> {i * (info?.['Range X(μm)'] || 0) / 10 } </p> </div>
+				))}
+			</div>
+
+			<div className='scale scaleY'>
+				<div className='label y'> Distance (μm) </div>
+				<div className='line'> </div>
+				{ new Array(numDashes).fill(1).map( (d, i) => (
+					<div className='dash vertical' style={{
+						transform: `translateX(${i * ((imgHeight + (imgHeight / numDashes)) / numDashes)}px)`
+					}}> <p> {i * (info?.['Range X(μm)'] || 0) / 10 } </p> </div>
+				))}
+			</div>
+
+			<canvas id="image" ref={ canvas } />
 		</div>
 	)
 }

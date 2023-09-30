@@ -23,3 +23,4 @@ export const yellow = ( message: string ) => console.log(chalk.yellow(message));
 export const red 	= ( message: string ) => console.log(chalk.red(message));
 export const grey 	= ( message: string ) => console.log(chalk.grey(message));
 export const loader = ( message: string, color: typeof green = green ) => color(`${message}\r`);
+

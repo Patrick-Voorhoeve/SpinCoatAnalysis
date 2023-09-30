@@ -7,6 +7,17 @@
 	margin: 0;
 	padding: 0;
 	box-sizing: border-box;
+	user-select: none;
+}
+
+.scaler {
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50% -50%);
+	width: 0px;
+	height: 0px;
+	z-index: 1000;
 }
 
 body {
