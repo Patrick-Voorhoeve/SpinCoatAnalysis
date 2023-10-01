@@ -1,0 +1,31 @@
+.BeforeVsAfter {
+	position: absolute;
+	top: 0px;
+	left: 1900px;
+
+	width: 800px;
+	height: fit-content;
+
+	border: 1px solid white;
+	border-radius: 10px;
+
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-start;
+	align-items: flex-start;
+
+	padding-bottom: 30px;
+	.row {
+		width: 100%;
+		height: 50px;
+
+		color: #ffffffcc;
+
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+
+		padding: 30px;
+		font-size: 20px;
+	}
+}

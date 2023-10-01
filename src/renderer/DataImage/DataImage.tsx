@@ -144,6 +144,15 @@ export default function DataImage( { imageName, setImageName, settings, setSetti
 					<p> { info?.['Sample Name'] } </p>
 				</span>
 				<span className='infoRow'>
+					<h4> Hydrogenation Temperature </h4>
+					<p> { info?.['Annealing Temp (C)']} °C </p>
+				</span>
+				<span className='infoRow'>
+					<h4> Hydrogenation Composition </h4>
+					<p> { parseFloat(`${info?.['Annealing H2 in N2 (%)']}`) * 100}% H2 </p>
+				</span>
+
+				<span className='infoRow'>
 					<h4> Image Name </h4>
 					<p> { info?.['Image Name'] } </p>
 				</span>

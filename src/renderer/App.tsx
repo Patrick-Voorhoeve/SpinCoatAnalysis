@@ -6,6 +6,7 @@ import SpectralGraph           from './SpectralGraph/SpectralGraph';
 import { Image, Manifest }     from '../main/SampleParser';
 import SpectralAverage         from './SpectralAverage/SpectralAverage';
 import SpectralNormalised      from './SpectralNormalised/SpectralNormalised';
+import BeforeVsAfter           from './BeforeVsAfter/BeforeVsAfter';
 
 const defaultSettings = {
 	showPoints     : true,
@@ -22,30 +23,40 @@ export type Settings = typeof defaultSettings;
 export default function App() {
 	const [ pos    		, setPos 		] = useState({x: -300, y: 100, scale: 60});
 	const [ mouse  		, setMouse		] = useState({ x: 0, y: 0, down: false, under: null as Element | null });
-	const [ imageName 	, setImageName 	] = useState('Hydrog_Sample_1_Image_1')
+	const [ imageName 	, setImageName 	] = useState('')
 	const [ settings	, setSettings   ] = useState(defaultSettings as Settings);
 	const [ MANIFEST 	, setManifest 	] = useState(null as Manifest | null);
 	const [ IMAGE		, setImage 		] = useState(null as Image | null);
+	const [ IMAGES 		, setImages 	] = useState([] as Image[]);
 	const [ loading 	, setLoading 	] = useState(false);
 
-	useEffect(() => {
-		( async () =>{
-			setLoading(true);
-			console.log("Getting Manifest and Data");
+	useEffect(() =>{
+		if(IMAGES.length === 0) (async () =>{
+			console.log("Getting Manifest and Images");
 
+			const images 		= await window.electron.getAllImages();
 			const manifest 		= await window.electron.getManifest();
-			const image			= await window.electron.getImage( imageName );
-
-			setManifest(manifest);
-			setImage(image);
-
-			const maxImageValue					= image.data.flat().reduce((max, cur) => max > cur ? max : cur, -Infinity) || settings.maxValue
-
-			setSettings({...settings, maxValue: maxImageValue, actualMaxValue: maxImageValue, truncMax: maxImageValue });
 
 			console.log("Done getting Manifest and Data");
-			setLoading(false);
+
+			setImageName(images[0].name);
+			setImage(images[0])
+			setManifest(manifest);
+			setImages(images);
 		})()
+	}, [])
+
+	useEffect(() => {
+		setLoading(true);
+
+		if(!IMAGE) return;
+		const maxImageValue					= IMAGE.data.flat().reduce((max, cur) => max > cur ? max : cur, -Infinity) || settings.maxValue
+
+		setSettings({...settings, maxValue: maxImageValue, actualMaxValue: maxImageValue, truncMax: maxImageValue });
+
+		setImage(IMAGES.find(img => img.name === imageName) || null);
+		setLoading(false);
+
 	}, [ imageName ])
 
 	useEffect(() => {
@@ -102,10 +113,12 @@ export default function App() {
 				transform: `translate3d(${pos.x}px, ${pos.y}px, 0px)`,
 			}}>
 				<DataImage 				imageName={imageName} setImageName={setImageName} settings={settings} setSettings={setSettings} MANIFEST={MANIFEST} IMAGE={IMAGE} />
+				<BeforeVsAfter 			imageName={imageName} setImageName={setImageName} settings={settings} setSettings={setSettings} MANIFEST={MANIFEST} IMAGE={IMAGE} IMAGES={IMAGES} />
 				<Histogram 				imageName={imageName} settings={settings} MANIFEST={MANIFEST} IMAGE={IMAGE} />
 				<SpectralGraph 			imageName={imageName} settings={settings} MANIFEST={MANIFEST} IMAGE={IMAGE} />
 				<SpectralAverage 		imageName={imageName} settings={settings} MANIFEST={MANIFEST} IMAGE={IMAGE} />
 				<SpectralNormalised 	imageName={imageName} settings={settings} MANIFEST={MANIFEST} IMAGE={IMAGE} />
+
 			</div>
 		</div>
 	</div>

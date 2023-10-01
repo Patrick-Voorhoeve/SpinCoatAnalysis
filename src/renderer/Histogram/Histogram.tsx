@@ -29,10 +29,12 @@ export default function Histogram( { imageName, settings, MANIFEST, IMAGE }: Pro
 		if(!IMAGE)		 	return;
 		if(!MANIFEST)		return;
 
-		const DATA       	= IMAGE.data.map( row => row.map(val => val > settings.truncMax ? settings.truncMax : val).map(val => val < settings.truncMin ? settings.truncMin : val ) );
-		const data       	= DATA.flat().filter(v => v < settings.truncMax);
+		const DATA       	= IMAGE.data.map( row => row.map(val => val > settings.truncMax ? null : val).map(val => (val && val < settings.truncMin) ? null : val ) );
+		const data       	= DATA.flat().filter(v => v !== null).filter(v => v && v < settings.truncMax) as number[];
 
-		setMean(math.mean(data))
+		if(data.length === 0) return;
+
+		setMean(Number(math.mean(data)))
 		setSTD(Number(math.std(data)));
 
 		const binSize    	= 500;

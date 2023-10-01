@@ -1,7 +1,6 @@
 // Disable no-unused-vars, broken for spread args
 /* eslint no-unused-vars: off */
 import { contextBridge, ipcRenderer, IpcRendererEvent }                       from 'electron';
-import { CSVData, SPECTRALDATA }                                              from './DataParser';
 import { Image, Manifest, PointInfo }                                         from './SampleParser';
 
 export type Channels = 'ipc-example';
@@ -13,8 +12,14 @@ const electronHandler = {
 		return data;
   	},
 
-	  getImage: async ( imageName: string ) => {
+	getImage: async ( imageName: string ) => {
 		const data = await ipcRenderer.invoke('getImage', imageName ) as Image;
+
+		return data;
+  	},
+
+	getAllImages: async ( ) => {
+		const data = await ipcRenderer.invoke('getAllImages' ) as Image[];
 
 		return data;
   	}

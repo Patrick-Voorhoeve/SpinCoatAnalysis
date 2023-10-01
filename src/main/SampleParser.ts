@@ -44,6 +44,10 @@ export default class SampleParser {
 		"zPosition":					number
 		"counts":						number
 		"color":						string
+		"Annealing Temp (C)":			number | "None"
+		"Annealing H2 in N2 (%)":		string
+		"pointType":					"Diamond" | "Void" | "Interest"
+
 	}[]
 
 	images	 = [] as {
@@ -58,6 +62,8 @@ export default class SampleParser {
 		ipcMain.removeHandler('getImage');
 		ipcMain.handle('getImage', ( _ev, imageName: string ) => this.images.find( img => img.name === imageName ) );
 
+		ipcMain.removeHandler('getAllImages');
+		ipcMain.handle('getAllImages', (_ev) => this.images);
 	}
 
 	loadManifest = async ( DATA_FOLDER_PATH: string ) => {
